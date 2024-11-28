@@ -3,7 +3,7 @@ version: "3.8"
 services:
   mongo1:
     image: mongo:latest
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017", "--oplogSize", "1024"]
     ports:
       - 27017:27017
     networks:
@@ -18,7 +18,7 @@ services:
 
   mongo2:
     image: mongo:latest
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27018"]
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27018", "--oplogSize", "1024"]
     ports:
       - 27018:27018
     networks:
@@ -33,7 +33,7 @@ services:
 
   mongo3:
     image: mongo:latest
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27019"]
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27019", "--oplogSize", "1024"]
     ports:
       - 27019:27019
     networks:
@@ -48,6 +48,7 @@ services:
 
 networks:
   mongo-net:
+    driver: bridge
 
 volumes:
   mongo1_data:
