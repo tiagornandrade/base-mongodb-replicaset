@@ -1,19 +1,31 @@
-.PHONY: up init_replica down verify
+COMPOSE_FILE := docker-compose.yml
+MONGO_INIT_SCRIPT := ./scripts/mongo_init.js
 
 up:
-	docker-compose up -d
+	docker-compose -f $(COMPOSE_FILE) up -d
 
-init_replica:
-	@echo "Aguardando MongoDB iniciar..."
-	@sleep 10
-	@echo "Inicializando o Replica Set..."
-	docker exec -it base-mongodb-replicaset-mongo1-1 mongosh --eval "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'base-mongodb-replicaset-mongo1-1:27017'}, {_id: 1, host: 'base-mongodb-replicaset-mongo2-1:27018'}, {_id: 2, host: 'base-mongodb-replicaset-mongo3-1:27019'}]})"
-	docker exec -it base-mongodb-replicaset-mongo1-1 mongosh --eval "rs.isMaster()"
-
-init: up init_replica
+init-mongo:
+	# Espera os containers MongoDB estarem prontos
+	@echo "Esperando MongoDB iniciar..."
+	@sleep 5
+	# Executa o script de inicialização do MongoDB
+	docker exec -i mongo-primary mongosh /docker-entrypoint-initdb.d/init_replica.js
 
 down:
-	docker-compose down
+	docker-compose -f $(COMPOSE_FILE) down
+
+clean:
+	docker-compose -f $(COMPOSE_FILE) down -v
 
 verify:
-	docker exec -it base-mongodb-replicaset-mongo1-1 mongosh --eval "rs.status()"
+	docker exec -it mongo-primary mongosh --eval "rs.status()"
+
+mongosh-primary:
+	docker exec -it mongo-primary mongosh
+
+mongosh-secondary-1:
+	docker exec -it mongo-secondary-1 mongosh
+
+mongosh-secondary-2:
+	docker exec -it mongo-secondary-2 mongosh
+

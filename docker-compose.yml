@@ -2,8 +2,9 @@ version: "3.8"
 
 services:
   mongo1:
+    container_name: mongo-primary
     image: mongo:latest
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017", "--oplogSize", "1024"]
+    command: mongod --replSet rs0 --bind_ip_all --port 27017 --oplogSize 1024
     ports:
       - 27017:27017
     networks:
@@ -12,13 +13,15 @@ services:
       test: echo 'rs.status().ok' | mongosh --port 27017 --quiet
       interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 10
     volumes:
       - mongo1_data:/data/db
+      - ./scripts:/docker-entrypoint-initdb.d
 
   mongo2:
+    container_name: mongo-secondary-1
     image: mongo:latest
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27018", "--oplogSize", "1024"]
+    command: mongod --replSet rs0 --bind_ip_all --port 27018 --oplogSize 1024
     ports:
       - 27018:27018
     networks:
@@ -27,13 +30,14 @@ services:
       test: echo 'rs.status().ok' | mongosh --port 27018 --quiet
       interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 10
     volumes:
       - mongo2_data:/data/db
 
   mongo3:
+    container_name: mongo-secondary-2
     image: mongo:latest
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27019", "--oplogSize", "1024"]
+    command: mongod --replSet rs0 --bind_ip_all --port 27019 --oplogSize 1024
     ports:
       - 27019:27019
     networks:
@@ -42,9 +46,19 @@ services:
       test: echo 'rs.status().ok' | mongosh --port 27019 --quiet
       interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 10
     volumes:
       - mongo3_data:/data/db
+
+  mongo-client:
+    image: mongo:latest
+    container_name: mongo-client
+    networks:
+      - mongo-net
+    depends_on:
+      - mongo1
+      - mongo2
+      - mongo3
 
 networks:
   mongo-net:
